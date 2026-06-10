@@ -1,0 +1,38 @@
+name: share-game
+on:
+  push:
+    branches: [claude/maou-html-review-www93i]
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+jobs:
+  upload:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Upload maou.html to file hosts
+        run: |
+          echo "=== catbox.moe ==="
+          curl -sS --max-time 60 -F reqtype=fileupload -F "fileToUpload=@maou.html;type=text/html" https://catbox.moe/user/api.php || echo "(catbox failed)"
+          echo
+          echo "=== 0x0.st ==="
+          curl -sS --max-time 60 -A "maou-share/1.0" -F "file=@maou.html" https://0x0.st || echo "(0x0 failed)"
+          echo
+  pages:
+    runs-on: ubuntu-latest
+    continue-on-error: true
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - uses: actions/checkout@v4
+      - run: mkdir -p _site && cp maou.html _site/maou.html && cp maou.html _site/index.html
+      - uses: actions/configure-pages@v5
+        with:
+          enablement: true
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: _site
+      - id: deployment
+        uses: actions/deploy-pages@v4
